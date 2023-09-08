@@ -1,0 +1,155 @@
+CREAZIONE TABELLE
+
+
+CREATE TABLE ANAGRAFICA(
+IDanagrafica int PRIMARY KEY IDENTITY ,
+cognome nvarchar(20) ,
+nome nvarchar(20) ,
+indirizzo nvarchar(20) ,
+citta nvarchar(20) ,
+cap int ,
+codicefiscale nvarchar(16) unique 
+
+)
+
+
+
+CREATE TABLE TIPO_VIOLAZIONE(
+IDviolazione int PRIMARY key identity,
+descrizione nvarchar(50) 
+
+)
+
+
+CREATE TABLE VERBALE (
+IDverbale int PRIMARY key identity,
+dataviolazione date ,
+indirizzoViolazione nvarchar(50) ,
+nominativo_agente nvarchar(20) ,
+DataTrascrizioneVerbale nvarchar(20),
+importo money ,
+DecurtamentoPunti int ,
+IDanagrafica int not null,
+IDviolazione int not null
+
+
+
+
+)
+
+ALTER TABLE VERBALE
+ADD CONSTRAINT FK_Anagrafica_Verbale
+FOREIGN KEY (IDanagrafica)
+REFERENCES ANAGRAFICA(IDanagrafica);
+
+ALTER TABLE VERBALE
+ADD CONSTRAINT FK_TipoViolazione_Verbale
+FOREIGN KEY (IDviolazione)
+REFERENCES TIPO_VIOLAZIONE(IDviolazione);
+
+----QUERY-----
+
+ SELECT count( * ) as conteggioVerbali from VERBALE
+
+ SELECT cognome, count(*) as conteggioverbali from VERBALE as V inner join
+ ANAGRAFICA as A on V.IDanagrafica=A.IDanagrafica
+ GROUP BY cognome
+
+ SELECT descrizione ,count(*) as conteggioverbali FROM VERBALE as V inner join
+ TIPO_VIOLAZIONE AS TV on V.IDviolazione=TV.IDviolazione
+ GROUP BY descrizione
+
+
+ SELECT SUM(DecurtamentoPunti)as DecurtamentoPunti,nome FROM VERBALE as V inner join
+ ANAGRAFICA as A on V.IDanagrafica=A.IDanagrafica
+ group by nome
+
+ SELECT cognome,nome,dataviolazione,indirizzoViolazione,importo,DecurtamentoPunti FROM ANAGRAFICA as A inner join VERBALE as V on
+ A.IDanagrafica=V.IDanagrafica
+ WHERE citta='Palermo'
+ GROUP by cognome,nome,dataviolazione,indirizzoViolazione,importo,DecurtamentoPunti
+
+ SELECT cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti FROM ANAGRAFICA as A inner join VERBALE as V on
+ A.IDanagrafica=V.IDanagrafica
+ where dataviolazione between '1/2/2009'  and '30/7/2009'
+ GROUP BY cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti
+
+ SELECT SUM(importo) as totaledapagare,cognome,nome from VERBALE as V inner join ANAGRAFICA  as A on 
+ V.IDanagrafica=A.IDanagrafica
+ group by cognome,nome
+
+ SELECT * from ANAGRAFICA
+WHERE citta='palermo'
+
+
+SELECT count(*) as numeroverbali,nominativo_agente FROM VERBALE
+group by nominativo_agente
+
+
+SELECT cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti FROM ANAGRAFICA as A inner join VERBALE as V on
+ A.IDanagrafica=V.IDanagrafica
+GROUP BY cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti
+HAVING DecurtamentoPunti >5
+
+SELECT cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti FROM ANAGRAFICA as A inner join VERBALE as V on
+ A.IDanagrafica=V.IDanagrafica
+GROUP BY cognome,nome,indirizzo,dataviolazione,importo,DecurtamentoPunti
+HAVING importo>400
+
+
+-----STORE PROCEDURE-----
+
+CREATE PROCEDURE parametrica
+ @data date 
+AS
+BEGIN
+	
+	SELECT dataviolazione,importo,DecurtamentoPunti FROM VERBALE
+	WHERE dataviolazione=@data
+
+END
+GO
+
+
+
+
+CREATE PROCEDURE contravvenzionianno
+@anno int
+
+AS
+BEGIN
+	SELECT IDverbale  , dataviolazione, Importo, DecurtamentoPunti  from verbale
+	where YEAR(dataviolazione) = @anno
+END
+GO
+
+
+
+
+CREATE PROCEDURE totalepuntidecurtati
+@data  date
+	
+AS
+BEGIN
+
+SELECT SUM(DecurtamentoPunti) as TotalePuntiDecurtati from verbale
+where  dataviolazione=@data
+END
+GO
+
+
+
+
+
+CREATE PROCEDURE Eliminailverbale
+@IDverbale int
+	
+AS
+BEGIN
+	DELETE FROM VERBALE
+	WHERE IDverbale=@IDverbale
+	
+END
+GO
+
+
